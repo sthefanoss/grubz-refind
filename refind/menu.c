@@ -1206,6 +1206,43 @@ cleanup:
     if (NewIcon) egFreeImage(NewIcon);
 }
 
+static VOID GrubzDrawDynamicFooter(REFIT_MENU_ENTRY *Entry) {
+    CHAR16 *Hint = NULL;
+    UINTN TextWidth = 0, XPos, YPos;
+    EG_IMAGE *TextBuffer = NULL;
+
+    if (!GlobalConfig.ScreenBackground || UGAHeight < (egGetFontHeight() * 4))
+        return;
+
+    YPos = UGAHeight - (egGetFontHeight() * 3);
+    DrawTextWithTransparency(L"", 0, YPos);
+
+    if (Entry && Entry->Title) {
+        if (MyStrStr(Entry->Title, L"Bazzite") != NULL) {
+            Hint = L"You can still access Bazzite's ostree rollback menu anytime by holding Shift or Esc right after selecting Bazzite.";
+        } else if (MyStrStr(Entry->Title, L"Windows") != NULL) {
+            Hint = L"Press Enter to boot Windows.";
+        }
+    }
+
+    if (!Hint)
+        return;
+
+    egMeasureText(Hint, &TextWidth, NULL);
+    if (TextWidth == 0 || TextWidth > UGAWidth)
+        return;
+
+    XPos = (UGAWidth - TextWidth) / 2;
+    TextBuffer = egCropImage(GlobalConfig.ScreenBackground, XPos, YPos, TextWidth, TextLineHeight());
+    if (!TextBuffer)
+        return;
+
+    egRenderText(Hint, TextBuffer, 0, 0, AverageBrightness(TextBuffer));
+    GrubzDimImage(TextBuffer, 50);
+    egDrawImage(TextBuffer, XPos, YPos);
+    egFreeImage(TextBuffer);
+}
+
 static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN *itemPosX,
                      UINTN row0PosY, UINTN row1PosY, UINTN textPosY) {
     INTN i;
@@ -1239,6 +1276,7 @@ static VOID PaintAll(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, UINTN
         DrawTextWithTransparency(Screen->Hint2, (UGAWidth - egComputeTextWidth(Screen->Hint2)) / 2,
                                  UGAHeight - (egGetFontHeight() * 2));
     } // if
+    GrubzDrawDynamicFooter(Screen->Entries[State->CurrentSelection]);
 } // static VOID PaintAll()
 
 // Move the selection to State->CurrentSelection, adjusting icon row if necessary...
@@ -1278,6 +1316,7 @@ static VOID PaintSelection(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State,
         } else {
              DrawTextWithTransparency(L"", 0, textPosY);
         }
+        GrubzDrawDynamicFooter(Screen->Entries[State->CurrentSelection]);
     } else { // Current selection not visible; must redraw the menu....
         MainMenuStyle(Screen, State, MENU_FUNCTION_PAINT_ALL, NULL);
     }

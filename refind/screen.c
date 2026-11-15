@@ -80,8 +80,8 @@ UINTN UGAHeight;
 BOOLEAN AllowGraphicsMode;
 BOOLEAN HaveResized = FALSE;
 
-EG_PIXEL StdBackgroundPixel  = { 0xbf, 0xbf, 0xbf, 0 };
-EG_PIXEL MenuBackgroundPixel = { 0xbf, 0xbf, 0xbf, 0 };
+EG_PIXEL StdBackgroundPixel  = { 0x0, 0x0, 0x0, 0 };
+EG_PIXEL MenuBackgroundPixel = { 0x0, 0x0, 0x0, 0 };
 EG_PIXEL DarkBackgroundPixel = { 0x0, 0x0, 0x0, 0 };
 
 static BOOLEAN GraphicsScreenDirty;
