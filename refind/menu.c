@@ -1219,9 +1219,9 @@ static VOID GrubzDrawDynamicFooter(REFIT_MENU_ENTRY *Entry) {
 
     if (Entry && Entry->Title) {
         if (MyStrStr(Entry->Title, L"Bazzite") != NULL) {
-            Hint = L"You can still access Bazzite's ostree rollback menu anytime by holding Shift or Esc right after selecting Bazzite.";
+            Hint = L"Press F2 or Tab to open Bazzite's ostree rollback menu";
         } else if (MyStrStr(Entry->Title, L"Windows") != NULL) {
-            Hint = L"Press Enter to boot Windows.";
+            Hint = L"Press F2 or Tab to open Windows Boot Manager / Recovery";
         }
     }
 
@@ -1987,18 +1987,26 @@ UINTN RunMainMenu(REFIT_MENU_SCREEN *Screen, CHAR16** DefaultSelection, REFIT_ME
         MenuTitle = StrDuplicate(TempChosenEntry->Title);
         if (MenuExit == MENU_EXIT_DETAILS) {
             if (TempChosenEntry->SubScreen != NULL) {
-               LOG(3, LOG_LINE_NORMAL, L"About to call RunGenericMenu() on subscreen '%s'", MenuTitle);
-               MenuExit = RunGenericMenu(TempChosenEntry->SubScreen,
-                                         Style,
-                                         &DefaultSubmenuIndex,
-                                         &TempChosenEntry);
-               LOG(3, LOG_LINE_NORMAL, L"RunGenericMenu() has returned %d", MenuExit);
-               if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
-                   MenuExit = 0;
-               if (MenuExit == MENU_EXIT_DETAILS) {
-                  if (!EditOptions((LOADER_ENTRY *) TempChosenEntry))
-                     MenuExit = 0;
-               } // if
+               if ((TempChosenEntry->SubScreen->EntryCount == 2) &&
+                   (TempChosenEntry->SubScreen->Entries[0] != NULL) &&
+                   (TempChosenEntry->SubScreen->Entries[1] != NULL) &&
+                   (TempChosenEntry->SubScreen->Entries[1]->Tag == TAG_RETURN)) {
+                   TempChosenEntry = TempChosenEntry->SubScreen->Entries[0];
+                   MenuExit = MENU_EXIT_ENTER;
+               } else {
+                   LOG(3, LOG_LINE_NORMAL, L"About to call RunGenericMenu() on subscreen '%s'", MenuTitle);
+                   MenuExit = RunGenericMenu(TempChosenEntry->SubScreen,
+                                             Style,
+                                             &DefaultSubmenuIndex,
+                                             &TempChosenEntry);
+                   LOG(3, LOG_LINE_NORMAL, L"RunGenericMenu() has returned %d", MenuExit);
+                   if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN)
+                       MenuExit = 0;
+                   if (MenuExit == MENU_EXIT_DETAILS) {
+                      if (!EditOptions((LOADER_ENTRY *) TempChosenEntry))
+                         MenuExit = 0;
+                   } // if
+               }
             } else { // no sub-screen; ignore keypress
                MenuExit = 0;
             }
